@@ -22,7 +22,13 @@ const mocks = vi.hoisted(() => ({
   toastError: vi.fn()
 }))
 vi.mock('@/components/agent/AgentCombobox', () => ({
-  default: ({ value, onValueChange }: { value: string | null; onValueChange?: (val: string | null) => void }) =>
+  default: ({
+    value,
+    onValueChange
+  }: {
+    value: string | null
+    onValueChange?: (val: string | null) => void
+  }) =>
     React.createElement('input', {
       'data-testid': 'agent-combobox',
       'data-agent-value': value ?? '',
@@ -480,8 +486,10 @@ describe('SourceControlAgentActionDialog', () => {
     })
 
     await vi.waitFor(() => expect(container.textContent).toContain('Launch agent'))
-    
-    const agentCombobox = container.querySelector('[data-testid="agent-combobox"]') as HTMLInputElement
+
+    const agentCombobox = container.querySelector(
+      '[data-testid="agent-combobox"]'
+    ) as HTMLInputElement
     expect(agentCombobox).not.toBeNull()
     expect(agentCombobox.value).toBe('gemini')
 
@@ -534,7 +542,9 @@ describe('SourceControlAgentActionDialog', () => {
     await flushEffects()
 
     // The selected agent must fall back to 'gemini'
-    const agentCombobox = container.querySelector('[data-testid="agent-combobox"]') as HTMLInputElement
+    const agentCombobox = container.querySelector(
+      '[data-testid="agent-combobox"]'
+    ) as HTMLInputElement
     expect(agentCombobox).not.toBeNull()
     expect(agentCombobox.value).toBe('gemini')
 
@@ -575,7 +585,9 @@ describe('SourceControlAgentActionDialog', () => {
     await flushEffects()
 
     // The selected agent must remain 'gemini'
-    const agentCombobox = container.querySelector('[data-testid="agent-combobox"]') as HTMLInputElement
+    const agentCombobox = container.querySelector(
+      '[data-testid="agent-combobox"]'
+    ) as HTMLInputElement
     expect(agentCombobox).not.toBeNull()
     expect(agentCombobox.value).toBe('gemini')
 

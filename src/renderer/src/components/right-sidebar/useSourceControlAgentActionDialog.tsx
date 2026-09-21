@@ -23,20 +23,44 @@ import { useSourceControlAgentActionStart } from './useSourceControlAgentActionS
 const DEFAULT_SAVE_TARGET_VALUE = 'global'
 
 export function useSourceControlAgentActionDialog({
-  open, onOpenChange, actionId, baseCommandInput, savedCommandInputTemplate, savedAgentArgs,
-  worktreeId, groupId, connectionId, repoId, promptDelivery = 'submit-after-ready',
-  launchPlatform, launchSource, savedAgentId, onSaveAgentDefault, onLaunchAccepted,
-  onLaunchAborted, onLaunched, onStart
+  open,
+  onOpenChange,
+  actionId,
+  baseCommandInput,
+  savedCommandInputTemplate,
+  savedAgentArgs,
+  worktreeId,
+  groupId,
+  connectionId,
+  repoId,
+  promptDelivery = 'submit-after-ready',
+  launchPlatform,
+  launchSource,
+  savedAgentId,
+  onSaveAgentDefault,
+  onLaunchAccepted,
+  onLaunchAborted,
+  onLaunched,
+  onStart
 }: SourceControlAgentActionDialogProps): UseSourceControlAgentActionDialogResult {
   const settings = useAppStore((state) => state.settings)
   const repo = useRepoById(repoId ?? null)
-  const launchAgentScope = useMemo(() => resolveSourceControlLaunchAgentScope({ settings, repo, actionId }), [actionId, repo, settings])
-  const defaultSaveTargetValue = launchAgentScope.overridesGlobalAgent && repoId ? 'repo' : DEFAULT_SAVE_TARGET_VALUE
+  const launchAgentScope = useMemo(
+    () => resolveSourceControlLaunchAgentScope({ settings, repo, actionId }),
+    [actionId, repo, settings]
+  )
+  const defaultSaveTargetValue =
+    launchAgentScope.overridesGlobalAgent && repoId ? 'repo' : DEFAULT_SAVE_TARGET_VALUE
   const ensureDetectedAgents = useAppStore((state) => state.ensureDetectedAgents)
   const ensureRemoteDetectedAgents = useAppStore((state) => state.ensureRemoteDetectedAgents)
-  const [commandTemplate, setCommandTemplate] = useState(savedCommandInputTemplate ?? '{basePrompt}')
+  const [commandTemplate, setCommandTemplate] = useState(
+    savedCommandInputTemplate ?? '{basePrompt}'
+  )
   const [selectedAgent, setSelectedAgent] = useState<TuiAgent | null>(savedAgentId ?? null)
-  const [agentArgs, setAgentArgs] = useState(savedAgentArgs ?? (savedAgentId ? resolveTuiAgentLaunchArgs(savedAgentId, settings?.agentDefaultArgs) : ''))
+  const [agentArgs, setAgentArgs] = useState(
+    savedAgentArgs ??
+      (savedAgentId ? resolveTuiAgentLaunchArgs(savedAgentId, settings?.agentDefaultArgs) : '')
+  )
   const [isArgsDirty, setIsArgsDirty] = useState(false)
   const isArgsDirtyRef = useRef(false)
   const isAgentDirtyRef = useRef(false)
@@ -72,9 +96,10 @@ export function useSourceControlAgentActionDialog({
     }
     setDetecting(true)
     try {
-      const nextAgents = typeof connectionId === 'string'
-        ? await ensureRemoteDetectedAgents(connectionId)
-        : await ensureDetectedAgents()
+      const nextAgents =
+        typeof connectionId === 'string'
+          ? await ensureRemoteDetectedAgents(connectionId)
+          : await ensureDetectedAgents()
       setDetectedAgents(nextAgents)
       return nextAgents
     } finally {
@@ -96,7 +121,10 @@ export function useSourceControlAgentActionDialog({
     setDetectedOpenCycle(null)
     setCommandTemplate(savedCommandInputTemplate ?? '{basePrompt}')
     setSelectedAgent(savedAgentId ?? null)
-    setAgentArgs(savedAgentArgs ?? (savedAgentId ? resolveTuiAgentLaunchArgs(savedAgentId, agentDefaultArgsRef.current) : ''))
+    setAgentArgs(
+      savedAgentArgs ??
+        (savedAgentId ? resolveTuiAgentLaunchArgs(savedAgentId, agentDefaultArgsRef.current) : '')
+    )
     setArgsDirty(false)
     isAgentDirtyRef.current = false
     setSaveLaunchRecipe(true)
@@ -115,15 +143,26 @@ export function useSourceControlAgentActionDialog({
       const finalAgent = fallbackAgent ?? savedAgentId ?? null
       if (finalAgent !== (savedAgentId ?? null)) {
         setArgsDirty(false)
-        setAgentArgs(finalAgent ? resolveTuiAgentLaunchArgs(finalAgent, agentDefaultArgsRef.current) : '')
+        setAgentArgs(
+          finalAgent ? resolveTuiAgentLaunchArgs(finalAgent, agentDefaultArgsRef.current) : ''
+        )
       }
       setSelectedAgent(finalAgent)
       setDetectedOpenCycle(cycle)
     })
-    return () => { stale = true }
+    return () => {
+      stale = true
+    }
   }, [
-    defaultSaveTargetValue, disabledAgents, open, refreshDetectedAgents, savedAgentId,
-    savedAgentArgs, savedCommandInputTemplate, repoId, settings?.defaultTuiAgent
+    defaultSaveTargetValue,
+    disabledAgents,
+    open,
+    refreshDetectedAgents,
+    savedAgentId,
+    savedAgentArgs,
+    savedCommandInputTemplate,
+    repoId,
+    settings?.defaultTuiAgent
   ])
 
   useEffect(() => {
@@ -134,72 +173,163 @@ export function useSourceControlAgentActionDialog({
       return
     }
     if (savedAgentArgs === null || savedAgentArgs === undefined) {
-      setAgentArgs(selectedAgent ? resolveTuiAgentLaunchArgs(selectedAgent, settings?.agentDefaultArgs) : '')
+      setAgentArgs(
+        selectedAgent ? resolveTuiAgentLaunchArgs(selectedAgent, settings?.agentDefaultArgs) : ''
+      )
     }
   }, [open, selectedAgent, savedAgentArgs, settings?.agentDefaultArgs, isArgsDirty])
 
   const closeDialog = useCallback(() => onOpenChange(false), [onOpenChange])
 
-  const enabledDetectedAgents = useMemo(() => detectedAgents.filter((agent) => isTuiAgentEnabled(agent, disabledAgents)), [detectedAgents, disabledAgents])
-  const agentOptions = useMemo(() => getAgentCatalog().filter((entry) => enabledDetectedAgents.includes(entry.id) || entry.id === selectedAgent), [enabledDetectedAgents, selectedAgent])
-  const selectedAgentUnavailable = Boolean(selectedAgent && !isSourceControlAgentDetectedAndEnabled(selectedAgent, detectedAgents, disabledAgents))
+  const enabledDetectedAgents = useMemo(
+    () => detectedAgents.filter((agent) => isTuiAgentEnabled(agent, disabledAgents)),
+    [detectedAgents, disabledAgents]
+  )
+  const agentOptions = useMemo(
+    () =>
+      getAgentCatalog().filter(
+        (entry) => enabledDetectedAgents.includes(entry.id) || entry.id === selectedAgent
+      ),
+    [enabledDetectedAgents, selectedAgent]
+  )
+  const selectedAgentUnavailable = Boolean(
+    selectedAgent &&
+    !isSourceControlAgentDetectedAndEnabled(selectedAgent, detectedAgents, disabledAgents)
+  )
   const hasEnabledAgents = enabledDetectedAgents.length > 0
-  const commandInput = renderSourceControlActionCommandTemplate(commandTemplate, { basePrompt: baseCommandInput })
+  const commandInput = renderSourceControlActionCommandTemplate(commandTemplate, {
+    basePrompt: baseCommandInput
+  })
   const trimmedCommandInput = commandInput.trim()
 
   const { deliveryPlan, resetDeliveryPlan, isStarting, handleStart, startWithDetectedAgents } =
     useSourceControlAgentActionStart({
-      selectedAgent, commandInput, trimmedCommandInput, agentArgs, commandTemplate,
-      saveLaunchRecipe, saveTargetValue, actionId, repoId, settings, repo, worktreeId, groupId,
-      promptDelivery, launchPlatform, isRemote: typeof connectionId === 'string',
-      launchSource, connectionUnavailable, refreshDetectedAgents, onStart, onSaveAgentDefault,
-      onLaunchAccepted, onLaunchAborted, onLaunched, onClose: closeDialog
+      selectedAgent,
+      commandInput,
+      trimmedCommandInput,
+      agentArgs,
+      commandTemplate,
+      saveLaunchRecipe,
+      saveTargetValue,
+      actionId,
+      repoId,
+      settings,
+      repo,
+      worktreeId,
+      groupId,
+      promptDelivery,
+      launchPlatform,
+      isRemote: typeof connectionId === 'string',
+      launchSource,
+      connectionUnavailable,
+      refreshDetectedAgents,
+      onStart,
+      onSaveAgentDefault,
+      onLaunchAccepted,
+      onLaunchAborted,
+      onLaunched,
+      onClose: closeDialog
     })
 
-  const canStart = Boolean(trimmedCommandInput) && Boolean(selectedAgent) && !selectedAgentUnavailable && !connectionUnavailable && !detecting && !isStarting
+  const canStart =
+    Boolean(trimmedCommandInput) &&
+    Boolean(selectedAgent) &&
+    !selectedAgentUnavailable &&
+    !connectionUnavailable &&
+    !detecting &&
+    !isStarting
 
-  const handleOpenChange = useCallback((nextOpen: boolean) => {
-    if (!nextOpen) {
-      resetDeliveryPlan()
-      setSaveLaunchRecipe(true)
-      setSaveTargetValue(defaultSaveTargetValue)
-    }
-    onOpenChange(nextOpen)
-  }, [defaultSaveTargetValue, onOpenChange, resetDeliveryPlan])
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) {
+        resetDeliveryPlan()
+        setSaveLaunchRecipe(true)
+        setSaveTargetValue(defaultSaveTargetValue)
+      }
+      onOpenChange(nextOpen)
+    },
+    [defaultSaveTargetValue, onOpenChange, resetDeliveryPlan]
+  )
 
   const { autoLaunchPending } = useSavedSourceControlAgentActionAutoStart({
-    open, openCycle, detectionReady: detectedOpenCycle === openCycle, actionId,
-    baseCommandInput, savedAgentId, savedCommandInputTemplate, savedAgentArgs, settings, repo,
-    repoId, worktreeId, connectionId, selectedAgent, trimmedCommandInput, connectionUnavailable,
-    detecting, isStarting, detectedAgents, disabledAgents,
+    open,
+    openCycle,
+    detectionReady: detectedOpenCycle === openCycle,
+    actionId,
+    baseCommandInput,
+    savedAgentId,
+    savedCommandInputTemplate,
+    savedAgentArgs,
+    settings,
+    repo,
+    repoId,
+    worktreeId,
+    connectionId,
+    selectedAgent,
+    trimmedCommandInput,
+    connectionUnavailable,
+    detecting,
+    isStarting,
+    detectedAgents,
+    disabledAgents,
     onAutoStart: ({ detectedAgents: agentsForLaunch, saveTargetValue: matchedTargetValue }) =>
-      startWithDetectedAgents({ detectedAgents: agentsForLaunch, saveTargetValueOverride: matchedTargetValue })
+      startWithDetectedAgents({
+        detectedAgents: agentsForLaunch,
+        saveTargetValueOverride: matchedTargetValue
+      })
   })
 
-  const statusCopy = buildSourceControlAgentStatusCopy({ selectedAgent, selectedAgentUnavailable, connectionUnavailable, hasEnabledAgents, detecting })
+  const statusCopy = buildSourceControlAgentStatusCopy({
+    selectedAgent,
+    selectedAgentUnavailable,
+    connectionUnavailable,
+    hasEnabledAgents,
+    detecting
+  })
 
-  const resetPlanAfter = useCallback(<T>(apply: (value: T) => void) => (value: T): void => {
-    apply(value)
-    resetDeliveryPlan()
-  }, [resetDeliveryPlan])
+  const resetPlanAfter = useCallback(
+    <T,>(apply: (value: T) => void) =>
+      (value: T): void => {
+        apply(value)
+        resetDeliveryPlan()
+      },
+    [resetDeliveryPlan]
+  )
 
-  const handleSelectedAgentChange = useCallback((nextAgent: TuiAgent | null) => {
-    setSelectedAgent(nextAgent)
-    isAgentDirtyRef.current = true
-    setArgsDirty(false)
-    if (savedAgentArgs === null || savedAgentArgs === undefined) {
-      setAgentArgs(nextAgent ? resolveTuiAgentLaunchArgs(nextAgent, settings?.agentDefaultArgs) : '')
-    }
-  }, [savedAgentArgs, settings?.agentDefaultArgs])
+  const handleSelectedAgentChange = useCallback(
+    (nextAgent: TuiAgent | null) => {
+      setSelectedAgent(nextAgent)
+      isAgentDirtyRef.current = true
+      setArgsDirty(false)
+      if (savedAgentArgs === null || savedAgentArgs === undefined) {
+        setAgentArgs(
+          nextAgent ? resolveTuiAgentLaunchArgs(nextAgent, settings?.agentDefaultArgs) : ''
+        )
+      }
+    },
+    [savedAgentArgs, settings?.agentDefaultArgs]
+  )
 
-  const onSelectedAgentChange = useMemo(() => resetPlanAfter(handleSelectedAgentChange), [resetPlanAfter, handleSelectedAgentChange])
+  const onSelectedAgentChange = useMemo(
+    () => resetPlanAfter(handleSelectedAgentChange),
+    [resetPlanAfter, handleSelectedAgentChange]
+  )
   const handleAgentArgsChange = useCallback((nextArgs: string) => {
     setAgentArgs(nextArgs)
     setArgsDirty(true)
   }, [])
-  const onAgentArgsChange = useMemo(() => resetPlanAfter(handleAgentArgsChange), [resetPlanAfter, handleAgentArgsChange])
-  const onCommandTemplateChange = useMemo(() => resetPlanAfter(setCommandTemplate), [resetPlanAfter])
-  const onSaveLaunchRecipeChange = useMemo(() => resetPlanAfter(setSaveLaunchRecipe), [resetPlanAfter])
+  const onAgentArgsChange = useMemo(
+    () => resetPlanAfter(handleAgentArgsChange),
+    [resetPlanAfter, handleAgentArgsChange]
+  )
+  const onCommandTemplateChange = useMemo(
+    () => resetPlanAfter(setCommandTemplate),
+    [resetPlanAfter]
+  )
+  const onSaveLaunchRecipeChange = useMemo(
+    () => resetPlanAfter(setSaveLaunchRecipe),
+    [resetPlanAfter]
+  )
 
   const agentScopeNote = useMemo(() => {
     if (!launchAgentScope.overridesGlobalAgent) {
@@ -214,10 +344,29 @@ export function useSourceControlAgentActionDialog({
   }, [launchAgentScope])
 
   return {
-    handleOpenChange, shouldRenderDialog: !autoLaunchPending, agentScopeNote, agentOptions,
-    selectedAgent, hasEnabledAgents, detecting, statusCopy, agentArgs, commandTemplate,
-    saveLaunchRecipe, saveTargetValue, saveTargets, settings, repo, deliveryPlan, canStart,
-    isStarting, onSelectedAgentChange, onAgentArgsChange, onCommandTemplateChange,
-    onSaveLaunchRecipeChange, onSaveAgentDefaultChange: setSaveTargetValue, handleStart
+    handleOpenChange,
+    shouldRenderDialog: !autoLaunchPending,
+    agentScopeNote,
+    agentOptions,
+    selectedAgent,
+    hasEnabledAgents,
+    detecting,
+    statusCopy,
+    agentArgs,
+    commandTemplate,
+    saveLaunchRecipe,
+    saveTargetValue,
+    saveTargets,
+    settings,
+    repo,
+    deliveryPlan,
+    canStart,
+    isStarting,
+    onSelectedAgentChange,
+    onAgentArgsChange,
+    onCommandTemplateChange,
+    onSaveLaunchRecipeChange,
+    onSaveAgentDefaultChange: setSaveTargetValue,
+    handleStart
   }
 }
