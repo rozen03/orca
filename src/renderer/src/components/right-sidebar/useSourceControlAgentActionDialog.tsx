@@ -155,7 +155,7 @@ export function useSourceControlAgentActionDialog({
             finalAgent ? resolveTuiAgentLaunchArgs(finalAgent, agentDefaultArgsRef.current) : ''
           )
         }
-        setSelectedAgent((current) => current ?? finalAgent)
+        setSelectedAgent(finalAgent)
         setDetectedOpenCycle(cycle)
       }
     )
